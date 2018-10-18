@@ -65,7 +65,7 @@ void loop()
     analogWrite(ENA, pwm_r);
     analogWrite(ENB, pwm_l);
   }
-  // Right
+  // Left
   else if(pwm_r >= 0 and pwm_l <= 0){
     digitalWrite(IN1, LOW);
     digitalWrite(IN2, HIGH);
@@ -74,7 +74,7 @@ void loop()
     analogWrite(ENA, pwm_r);
     analogWrite(ENB, abs(pwm_l));
   }
-  // Left
+  // Right
   else if(pwm_r <= 0 and pwm_l >= 0){
     digitalWrite(IN1, HIGH);
     digitalWrite(IN2, LOW);

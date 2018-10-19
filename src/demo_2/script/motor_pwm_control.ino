@@ -4,17 +4,18 @@
 
 /* 
   Note:
-  IN1 High, IN2 LOW  > backword
-  IN1 LOW,  IN2 HIGH > forward
-  IN3 HIGH, IN4 LOW  > backword
-  IN3 LOW,  IN4 HIGH > forward
+  motor side as front
+  IN1 High, IN2 LOW  > forward
+  IN1 LOW,  IN2 HIGH > backward
+  IN3 HIGH, IN4 LOW  > forward
+  IN3 LOW,  IN4 HIGH > backward
 */ 
 
-// Right wheel
+// Left wheel
 #define IN1 2
 #define IN2 3
 #define ENA 6
-// Left wheel
+// Right wheel
 #define IN3 4
 #define IN4 5
 #define ENB 9
@@ -27,12 +28,12 @@ int pwm_r = 0, pwm_l = 0;
 // callback
 void cb_r(const std_msgs::Int16& msg){
   pwm_r = msg.data;
-  nh.loginfo("pwm r update");
+  //nh.loginfo("pwm r update");
 }
 
 void cb_l(const std_msgs::Int16& msg){
   pwm_l = msg.data;
-  nh.loginfo("pwm l update");
+  //nh.loginfo("pwm l update");
 } 
 
 ros::Subscriber<std_msgs::Int16> sub_right("right_pwm", &cb_r);
@@ -58,17 +59,17 @@ void loop()
 {
   // Forward
   if(pwm_r >= 0 and pwm_l >= 0){
-    digitalWrite(IN1, LOW);
-    digitalWrite(IN2, HIGH);
-    digitalWrite(IN3, LOW);
-    digitalWrite(IN4, HIGH);
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, LOW);
     analogWrite(ENA, pwm_r);
     analogWrite(ENB, pwm_l);
   }
   // Left
   else if(pwm_r >= 0 and pwm_l <= 0){
-    digitalWrite(IN1, LOW);
-    digitalWrite(IN2, HIGH);
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
     digitalWrite(IN3, HIGH);
     digitalWrite(IN4, LOW);
     analogWrite(ENA, pwm_r);
@@ -76,19 +77,19 @@ void loop()
   }
   // Right
   else if(pwm_r <= 0 and pwm_l >= 0){
-    digitalWrite(IN1, HIGH);
-    digitalWrite(IN2, LOW);
-    digitalWrite(IN3, LOW);
-    digitalWrite(IN4, HIGH);
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, HIGH);
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, LOW);
     analogWrite(ENA, abs(pwm_r));
     analogWrite(ENB, pwm_l);
   }
   // Backward
   else{
-    digitalWrite(IN1, HIGH);
-    digitalWrite(IN2, LOW);
-    digitalWrite(IN3, HIGH);
-    digitalWrite(IN4, LOW);
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, HIGH);
+    digitalWrite(IN3, LOW);
+    digitalWrite(IN4, HIGH);
     analogWrite(ENA, abs(pwm_r));
     analogWrite(ENB, abs(pwm_l));
   }

@@ -1,0 +1,6 @@
+<launch>
+  <node pkg="rosserial_python" type="serial_node.py" name="arduino" args="/dev/ttyACM1" output="screen"/>
+  <node pkg="demo_3" type="car_control.py" name="test" output="screen" required="true">
+    <param name="trim" value="-20"/>
+  </node>
+</launch>

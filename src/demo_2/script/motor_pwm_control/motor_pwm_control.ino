@@ -63,8 +63,8 @@ void loop()
     digitalWrite(IN2, LOW);
     digitalWrite(IN3, HIGH);
     digitalWrite(IN4, LOW);
-    analogWrite(ENA, pwm_r);
-    analogWrite(ENB, pwm_l);
+    analogWrite(ENA, pwm_l);
+    analogWrite(ENB, pwm_r);
   }
   // Left
   else if(pwm_r >= 0 and pwm_l <= 0){
@@ -72,8 +72,8 @@ void loop()
     digitalWrite(IN2, LOW);
     digitalWrite(IN3, HIGH);
     digitalWrite(IN4, LOW);
-    analogWrite(ENA, pwm_r);
-    analogWrite(ENB, abs(pwm_l));
+    analogWrite(ENA, pwm_l);
+    analogWrite(ENB, abs(pwm_r));
   }
   // Right
   else if(pwm_r <= 0 and pwm_l >= 0){
@@ -81,8 +81,8 @@ void loop()
     digitalWrite(IN2, HIGH);
     digitalWrite(IN3, HIGH);
     digitalWrite(IN4, LOW);
-    analogWrite(ENA, abs(pwm_r));
-    analogWrite(ENB, pwm_l);
+    analogWrite(ENA, abs(pwm_l));
+    analogWrite(ENB, pwm_r);
   }
   // Backward
   else{
@@ -90,8 +90,8 @@ void loop()
     digitalWrite(IN2, HIGH);
     digitalWrite(IN3, LOW);
     digitalWrite(IN4, HIGH);
-    analogWrite(ENA, abs(pwm_r));
-    analogWrite(ENB, abs(pwm_l));
+    analogWrite(ENA, abs(pwm_l));
+    analogWrite(ENB, abs(pwm_r));
   }
   nh.spinOnce();
 }

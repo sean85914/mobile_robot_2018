@@ -18,12 +18,12 @@ class Go_straight(smach.State):
                                              'time_out',
                                              'keep_going'])
 		self.controller = controller
-		self.sub_right_collision = rospy.Subscriber('right_collision', Bool, queue_size = 1,
-		                                            self.right_collision_cb)
-		self.sub_left_collision = rospy.Subscriber('left_collision', Bool, queue_size = 1,
-		                                            self.left_collision_cb)
-		self.sub_photo_collision = rospy.Subscriber('photo_collision', Bool, queue_size = 1,
-			                                    self.photo_collision_cb)
+		self.sub_right_collision = rospy.Subscriber('right_collision', Bool,
+		                                            self.right_collision_cb, queue_size = 1)
+		self.sub_left_collision = rospy.Subscriber('left_collision', Bool,
+		                                           self.left_collision_cb, queue_size = 1)
+		self.sub_photo_collision = rospy.Subscriber('photo_collision', Bool,
+                                                    self.photo_collision_cb, queue_size = 1)
 		self.start_time = start_time.to_sec()
 		self.right_collision = False
 		self.left_collision  = False

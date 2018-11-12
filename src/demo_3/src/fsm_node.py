@@ -27,12 +27,18 @@ class Go_straight(smach.State):
 		self.start_time = start_time.to_sec()
 		self.right_collision = False
 		self.left_collision  = False
-		self.photo_collision = False                                          
+		self.photo_collision = False
+		self.times = 0
 	def execute(self, userdata):
+		rospy.loginfo("Execute: %s", rospy.Time.now().to_sec() - self.start_time)
 		if rospy.Time.now().to_sec() - self.start_time > 90:
 			self.controller.stop_moving()
 			return 'time_out'
 		if self.right_collision:
+			return 'right_collision'
+		if self.times == 8: # go straight too long time
+			self.times = 0
+			rospy.loginfo("Go straight too long time, the car maybe blocked, go to right collision recovery")
 			return 'right_collision'
 		if self.left_collision:
 			return 'left_collision'
@@ -41,7 +47,7 @@ class Go_straight(smach.State):
 			return 'photo_collision'
 		else:
 			self.controller.go_straight()
-			#rospy.sleep(3.0)
+			self.times += 1
 			return 'keep_going'
 	def right_collision_cb(self, msg):
 		self.right_collision = msg.data
@@ -100,7 +106,6 @@ def main():
 	
 	# execute the state machine
 	outcome = sm.execute()
-	
 	rospy.spin()
 	# stop the application
 	sis.stop()

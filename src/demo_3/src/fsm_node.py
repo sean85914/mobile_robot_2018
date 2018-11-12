@@ -30,14 +30,14 @@ class Go_straight(smach.State):
 		self.photo_collision = False                                          
 	def execute(self, userdata):
 		if rospy.Time.now().to_sec() - self.start_time > 90:
-			self.controller.stop()
+			self.controller.stop_moving()
 			return 'time_out'
 		if self.right_collision:
 			return 'right_collision'
 		if self.left_collision:
 			return 'left_collision'
 		if self.photo_collision:
-			self.controller.stop()
+			self.controller.stop_moving()
 			return 'photo_collision'
 		else:
 			self.controller.go_straight()

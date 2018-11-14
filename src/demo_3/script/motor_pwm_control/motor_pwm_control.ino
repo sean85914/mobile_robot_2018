@@ -20,6 +20,12 @@
     Photo: 8
 */
 
+/* 
+  Sensor output:
+    touch sensor: 1 if touch and 0 otherwise
+    photo sensor: 0 if detect light and 1 otherwise
+*/
+
 // Left wheel
 #define IN1 2
 #define IN2 3
@@ -87,10 +93,10 @@ void setup()
 void loop()
 {
   // Publish sensor data
-  touch_r.data = digitalRead(TOUCH_R); pub_touch_r.publish(&touch_r); delay(100);
-  touch_l.data = digitalRead(TOUCH_L); pub_touch_l.publish(&touch_l); delay(100);
-  touch_d.data = digitalRead(TOUCH_D); pub_touch_d.publish(&touch_d); delay(100);
-  photo.data = !digitalRead(PHOTO); pub_photo_state.publish(&photo);  delay(100);
+  touch_r.data = digitalRead(TOUCH_R); pub_touch_r.publish(&touch_r); delay(50);
+  touch_l.data = digitalRead(TOUCH_L); pub_touch_l.publish(&touch_l); delay(50);
+  touch_d.data = digitalRead(TOUCH_D); pub_touch_d.publish(&touch_d); delay(50);
+  photo.data = !digitalRead(PHOTO); pub_photo_state.publish(&photo);  delay(50);
   // Forward
   if(pwm_r >= 0 and pwm_l >= 0){
     digitalWrite(IN1, HIGH);

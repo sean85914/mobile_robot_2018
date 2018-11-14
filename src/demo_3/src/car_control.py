@@ -9,7 +9,7 @@ class Car_control(object):
 		self.pub_left_pwm  = rospy.Publisher("left_pwm", Int16, queue_size = 10)
 		self.trim = rospy.get_param("/fsm_node/trim", 0)
 		print "trim: ", self.trim
-		self.pwm = 110
+		self.pwm = 120
 		self.pwm_data = Int16()
 		rospy.sleep(3.0) # sleep 3.0 second to ensure topics connection
 	def stop_moving(self):
@@ -25,7 +25,7 @@ class Car_control(object):
 		rospy.sleep(0.5)
 		self.pub_pwm(-self.pwm - self.trim, -self.pwm + self.trim)
 		rospy.sleep(1.0) # reverse 1.0 seconds
-		self.pub_pwm(self.pwm/2, self.pwm)
+		self.pub_pwm(self.pwm, -self.pwm)
 	def right_collision_recovery(self):
 		# since right collison, we have to reverse and turn left
 		# stop first
@@ -33,7 +33,7 @@ class Car_control(object):
 		rospy.sleep(0.5)
 		self.pub_pwm(-self.pwm - self.trim, -self.pwm + self.trim)
 		rospy.sleep(1.0) # reverse 1.0 seconds
-		self.pub_pwm(self.pwm, self.pwm/2)
+		self.pub_pwm(-self.pwm, self.pwm)
 	def pub_pwm(self, r_value, l_value):
 		pwm = Int16(r_value)
 		print "right pwm: ", pwm.data
@@ -42,6 +42,12 @@ class Car_control(object):
 		print "left pwm: ", pwm.data
 		self.pub_left_pwm.publish(pwm)
                 rospy.sleep(1.0)
+	def __del__(self):
+		rospy.loginfo("stop the vehicle")
+		rospy.sleep(1.0)
+		self.stop_moving()
+		print "__del__"
+		rospy.sleep(1.0)
 	def shutdown(self):
 		pass	
 

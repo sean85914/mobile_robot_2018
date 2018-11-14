@@ -19,16 +19,17 @@ class Go_straight(smach.State):
                                              'keep_going'])
 		self.controller = controller
 		self.sub_right_collision = rospy.Subscriber('right_collision', Bool,
-		                                            self.right_collision_cb, queue_size = 1)
+		                                            self.right_collision_cb, queue_size = 10)
 		self.sub_left_collision = rospy.Subscriber('left_collision', Bool,
-		                                           self.left_collision_cb, queue_size = 1)
-		self.sub_photo_collision = rospy.Subscriber('photo_collision', Bool,
-                                                    self.photo_collision_cb, queue_size = 1)
+		                                           self.left_collision_cb, queue_size = 10)
+		self.sub_photo_state = rospy.Subscriber('photo_state', Bool,
+                                                self.photo_state_cb, queue_size = 10)
 		self.start_time = start_time.to_sec()
 		self.right_collision = False
 		self.left_collision  = False
 		self.photo_collision = False
-		self.times = 0
+		self.photo_state     = False
+		self.times           = 0
 	def execute(self, userdata):
 		rospy.loginfo("Execute: %s", rospy.Time.now().to_sec() - self.start_time)
 		if rospy.Time.now().to_sec() - self.start_time > 90:
@@ -53,8 +54,8 @@ class Go_straight(smach.State):
 		self.right_collision = msg.data
 	def left_collision_cb(self, msg):
 		self.left_collision = msg.data
-	def photo_collision_cb(self, msg):
-		self.photo_collision = msg.data
+	def photo_state_cb(self, msg):
+		self.photo_state = msg.data
 		
 class Left_collision_recovery(smach.State):
 	def __init__(self):
@@ -74,6 +75,24 @@ class Right_collision_recovery(smach.State):
 		rospy.sleep(3.0)
 		return 'time_out'
 
+class Try_find_light(smach.State):
+	def __init__(self):
+		smach.State.__init__(self, outcomes=['find', 'not_found'])
+		self.controller = controller
+		self.photo_collision = False
+		self.sub_photo_collision = rospy.Subscriber('photo_collision', Bool,
+         											self.photo_collision_cb, queue_size = 10)
+	def execute(self, userdata):
+		self.start_time = rospy.Time.now().to_sec()
+		while rospy.Time.now().to_sec() - self.start_time < 3.0:
+			if self.photo_collision:
+				return 'find'
+		rospy.loginfo("Detected photo but not attach it")
+		return 'not_found'
+
+	def photo_collision_cb(self, msg):
+		self.photo_collision = msg.data
+		
 def main():
 	rospy.init_node("car_motion_fsm_node")
 	# create a SMACH state machine
@@ -86,7 +105,7 @@ def main():
 			Go_straight(start_time),
 			transitions={'right_collision':'Right_collision_recovery',
 				'left_collision':'Left_collision_recovery',
-				'photo_collision':'SUCCEED',
+				'photo_detected':'Try_find_light',
 				'time_out':'FAILED',
                 'keep_going': 'Go_straight'}
 		)
@@ -98,8 +117,13 @@ def main():
 		smach.StateMachine.add(
 			'Left_collision_recovery', 
 			Left_collision_recovery(),
-		transitions={'time_out':'Go_straight'}
-	)
+			transitions={'time_out':'Go_straight'}
+		)
+		smach.StateMachine.add(
+			'Try_find_light',
+			Try_find_light(),
+			transition={'find':'SUCCEED', 'not_find':'Go_straight'}
+		)
 
 	sis = smach_ros.IntrospectionServer('server_name', sm, '/MY_FSM')
 	sis.start()

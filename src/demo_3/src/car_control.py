@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import random
 import rospy
 from std_msgs.msg import Int16
 
@@ -18,22 +19,36 @@ class Car_control(object):
 	def go_straight(self):
 		# go straight
 		self.pub_pwm(self.pwm + self.trim, self.pwm - self.trim)
+	def go_faster(self):
+		self.pub_pwm(self.pwm + self.trim + 30, self.pwm - self.trim + 30)
 	def left_collision_recovery(self):
 		# since left collision, we have to reverse and turn right
 		# stop first
 		self.stop_moving()
 		rospy.sleep(0.5)
 		self.pub_pwm(-self.pwm - self.trim, -self.pwm + self.trim)
-		rospy.sleep(1.0) # reverse 1.0 seconds
-		self.pub_pwm(self.pwm, -self.pwm)
+		rospy.sleep(0.5) # reverse 0.5 seconds
+		rand = random.randint(0, 1)
+		if rand == 0:
+			self.pub_pwm(self.pwm, -self.pwm) # spin
+			return 'spin'
+		else:
+			self.pub_pwm(self.pwm, self.pwm + 30) # turn right
+			return 'right'
 	def right_collision_recovery(self):
 		# since right collison, we have to reverse and turn left
 		# stop first
 		self.stop_moving()
 		rospy.sleep(0.5)
 		self.pub_pwm(-self.pwm - self.trim, -self.pwm + self.trim)
-		rospy.sleep(1.0) # reverse 1.0 seconds
-		self.pub_pwm(-self.pwm, self.pwm)
+		rospy.sleep(0.5) # reverse 0.5 seconds
+		rand = random.randint(0, 1)
+		if rand == 0:
+			self.pub_pwm(-self.pwm, self.pwm) # spin
+			return 'spin'
+		else:
+			self.pub_pwm(self.pwm + 30, self.pwm) # turn left
+			return 'left'
 	def pub_pwm(self, r_value, l_value):
 		pwm = Int16(r_value)
 		print "right pwm: ", pwm.data

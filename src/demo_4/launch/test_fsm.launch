@@ -1,0 +1,4 @@
+<launch>
+  <node pkg="demo_3" name="fsm" type="fsm_node.py" output="screen"/>
+  <node pkg="smach_viewer" name="fsm_viewer" type="smach_viewer.py"/>
+</launch>

@@ -30,7 +30,7 @@ class Car_control(object):
 		rospy.sleep(0.5) # reverse 0.5 seconds
 		rand = random.randint(0, 1)
 		if rand == 0:
-			self.pub_pwm(self.pwm, -self.pwm) # spin
+			self.pub_pwm(self.pwm/2, -self.pwm/2) # spin
 			return 'spin'
 		else:
 			self.pub_pwm(self.pwm, self.pwm + 30) # turn right
@@ -44,7 +44,7 @@ class Car_control(object):
 		rospy.sleep(0.5) # reverse 0.5 seconds
 		rand = random.randint(0, 1)
 		if rand == 0:
-			self.pub_pwm(-self.pwm, self.pwm) # spin
+			self.pub_pwm(-self.pwm/2, self.pwm/2) # spin
 			return 'spin'
 		else:
 			self.pub_pwm(self.pwm + 30, self.pwm) # turn left

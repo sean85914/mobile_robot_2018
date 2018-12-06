@@ -33,7 +33,7 @@ class Go_straight(smach.State):
 		self.times           = 0
 	def execute(self, userdata):
 		rospy.loginfo("Execute: %s", rospy.Time.now().to_sec() - self.start_time)
-		if rospy.Time.now().to_sec() - self.start_time > 90:
+		if rospy.Time.now().to_sec() - self.start_time > 120:
 			self.controller.stop_moving()
 			return 'time_out'
 		if GPIO.input(5):
@@ -146,6 +146,7 @@ def main():
 	rospy.init_node("car_motion_fsm_node")
 	# create a SMACH state machine
 	sm = smach.StateMachine(outcomes=['SUCCEED', 'FAILED'])
+	c = raw_input("Press any key to start")
 	# open container
 	start_time = rospy.Time.now()
 	with sm:

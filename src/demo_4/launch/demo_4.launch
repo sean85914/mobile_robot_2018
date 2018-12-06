@@ -1,8 +1,11 @@
 <launch>
   <arg name="test" default="false"/>
+  <arg name="trim" default="-20"/>
+  <arg name="target_door" default="600"/>
   <node pkg="rosserial_python" type="serial_node.py" name="arduino" args="/dev/ttyACM0" output="screen"/>
   <node pkg="demo_4" type="fsm_node.py" name="fsm_node" output="screen" required="true" unless="$(arg test)">
-    <param name="trim" value="-20"/>
+    <param name="trim" value="$(arg trim)"/>
+    <param name="target_door" value="$(arg target_door)"/>
   </node>
   <node pkg="demo_4" type="car_control.py" name="car_control" output="screen" required="true" if="$(arg test)"/>
   <!--node pkg="smach_viewer" type="smach_viewer.py" name="smach_viewer"/-->

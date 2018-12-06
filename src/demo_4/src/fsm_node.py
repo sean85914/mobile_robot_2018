@@ -18,18 +18,16 @@ controller = Car_control()
 '''
 # Pin mode setup
 GPIO.setmode(GPIO.BCM)
-GPIO.setup(27, GPIO.OUT) # photo collision
-GPIO.setup(22, GPIO.OUT) # left collision
-GPIO.setup(5, GPIO.OUT) # right collision
+GPIO.setup(27, GPIO.IN) # photo collision
+GPIO.setup(22, GPIO.IN) # left collision
+GPIO.setup(5, GPIO.IN) # right collision
+GPIO.setup(21, GPIO.IN) # photo sensor
 
 class Go_straight(smach.State):
 	def __init__(self, start_time):
 		smach.State.__init__(self, outcomes=['right_collision', 'left_collision', 'photo_collision', 'time_out', 'keep_going'])
 		self.controller = controller
-		self.sub_photo_state = rospy.Subscriber('photo_state', Bool,
-                                                        self.photo_state_cb, queue_size = 1)
 		self.start_time = start_time.to_sec()
-		self.photo_state     = False
 		self.times           = 0
 	def execute(self, userdata):
 		rospy.loginfo("Execute: %s", rospy.Time.now().to_sec() - self.start_time)
@@ -51,7 +49,7 @@ class Go_straight(smach.State):
 		if GPIO.input(27):
 			self.controller.stop_moving()
 			return 'photo_collision'
-		if self.photo_state:
+		if GPIO.input(21):
 			self.controller.go_faster()
 			rospy.loginfo("Find light")
 			return 'keep_going'
@@ -59,16 +57,11 @@ class Go_straight(smach.State):
 			self.controller.go_straight()
 			self.times += 1
 			return 'keep_going'
-	def photo_state_cb(self, msg):
-		self.photo_state = msg.data
 		
 class Left_collision_recovery(smach.State):
 	def __init__(self):
 		smach.State.__init__(self, outcomes=['left_collision', 'right_collision', 'photo_collision', 'go_straight', 'time_out'])
 		self.controller = controller
-		self.sub_photo_state = rospy.Subscriber('photo_state', Bool,
-							self.photo_state_cb, queue_size = 1)
-		self.photo_state     = False
 		self.first_execute   = True
 		self.first_time      = None
 		self.str             = None
@@ -96,13 +89,11 @@ class Left_collision_recovery(smach.State):
 			self.controller.stop_moving()
 			self.first_execute = True
 			return 'photo_collision'
-		if self.photo_state:
+		if GPIO.input(21):
 			self.first_execute = True
 			return 'go_straight'
 		rospy.sleep(0.1)
 		return 'left_collision'
-	def photo_state_cb(self, msg):
-		self.photo_state = msg.data
 	
 class Right_collision_recovery(smach.State):
 	def __init__(self):
@@ -110,7 +101,6 @@ class Right_collision_recovery(smach.State):
 		self.controller = controller
 		self.sub_photo_state = rospy.Subscriber('photo_state', Bool,
 							self.photo_state_cb, queue_size = 1)
-		self.photo_state     = False
 		self.first_execute   = True
 		self.first_time      = None
 		self.str             = None
@@ -134,7 +124,7 @@ class Right_collision_recovery(smach.State):
 		if GPIO.input(5):
 			self.first_execute = True
 			return 'right_collision'
-		if self.photo_state:
+		if GPIO.input(21):
 			self.first_execute = True
 			return 'go_straight'
 		if GPIO.input(27):
@@ -143,8 +133,6 @@ class Right_collision_recovery(smach.State):
 			return 'photo_collision'
 		rospy.sleep(0.1)
 		return 'right_collision'
-	def photo_state_cb(self, msg):
-		self.photo_state = msg.data
 		
 def main():
 	rospy.init_node("car_motion_fsm_node")

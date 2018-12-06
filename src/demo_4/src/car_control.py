@@ -57,14 +57,11 @@ class Car_control(object):
 		print "left pwm: ", pwm.data
 		self.pub_left_pwm.publish(pwm)
                 rospy.sleep(1.0)
-	def __del__(self):
+	def shutdown(self):
 		rospy.loginfo("stop the vehicle")
 		rospy.sleep(1.0)
 		self.stop_moving()
-		print "__del__"
 		rospy.sleep(1.0)
-	def shutdown(self):
-		pass	
 
 if __name__ == "__main__":
 	rospy.init_node("car_control")

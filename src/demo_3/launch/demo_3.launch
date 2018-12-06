@@ -2,7 +2,7 @@
   <arg name="test" default="false"/>
   <node pkg="rosserial_python" type="serial_node.py" name="arduino" args="/dev/ttyACM0" output="screen"/>
   <node pkg="demo_3" type="fsm_node.py" name="fsm_node" output="screen" required="true" unless="$(arg test)">
-    <param name="trim" value="-10"/>
+    <param name="trim" value="-20"/>
   </node>
   <node pkg="demo_3" type="car_control.py" name="cat_control" output="screen" required="true" if="$(arg test)"/>
   <!--node pkg="smach_viewer" type="smach_viewer.py" name="smach_viewer"/-->

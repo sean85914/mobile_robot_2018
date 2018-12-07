@@ -93,14 +93,14 @@ class Car_control(object):
 	def rotate_heading(self, rotate_type = "CCW"):
 		if rotate_type == "CCW": # Counterclockwise, r > 0, l < 0
 			ts = rospy.Time.now().to_sec()
-			while rospy.Time.now().to_sec() - ts < 0.01:
-				self.pub_pwm(self.pwm/1.6, -self.pwm/1.6)
+			while rospy.Time.now().to_sec() - ts < 0.1:
+				self.pub_pwm(self.pwm/1.5, -self.pwm/1.5)
 			self.stop_moving()
 			
 		elif rotate_type == "CW": # Clockwise, r < 0, l > 0
 			ts = rospy.Time.now().to_sec()
-			while rospy.Time.now().to_sec() - ts < 0.01:
-				self.pub_pwm(-self.pwm/1.6, self.pwm/1.6)
+			while rospy.Time.now().to_sec() - ts < 0.1:
+				self.pub_pwm(-self.pwm/1.5, self.pwm/1.5)
 			self.stop_moving()
 	# Go toward the door
 	def go_toward_door(self):

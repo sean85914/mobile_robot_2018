@@ -2,7 +2,7 @@
   <arg name="trim" default="-10"/>
   <arg name="door_fre" default="600"/>
   <arg name="start_tag" default="A"/>
-  <node pkg="demo_4" type="demo_4.py" name="demo_4_node" output="screen" required="true">
+  <node pkg="demo_4" type="car_control_v2.py" name="demo_4_node" output="screen" required="true">
     <param name="trim" value="$(arg trim)"/>
     <param name="door_frequency" value="$(arg door_fre)"/>
     <param name="start_tag" value="$(arg start_tag)"/>

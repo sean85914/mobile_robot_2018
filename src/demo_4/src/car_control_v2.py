@@ -29,7 +29,7 @@ class Car_control(object):
 			self.stop_moving(0.5)
 	# Reverse
 	def reverse(self, t):
-		self.pub_pwm(-80 - self.trim, -80 + self.trim, t)
+		self.pub_pwm(-120 - self.trim, -120 + self.trim, t)
 		self.stop_moving(0.5)
 	# Turn
 	def turn(self, direction, t):
@@ -69,13 +69,13 @@ if __name__ == "__main__":
 	#cc.stop_moving(1.0)
 	#cc.rotate_in_place('CCW', 1)
 	#cc.stop_moving(1.0)
-	#print "reverse"
-	#cc.reverse(3)
+	print "reverse"
+	cc.reverse(3)
 	#print "turn left"
 	#cc.turn("Left", 1)
 	#print "stop"
 	#cc.stop_moving(1)
-	print "turn right"
-	cc.turn("Right", 1)
-	cc.stop_moving(1.0)
+	#print "turn right"
+	#cc.turn("Right", 1)
+	#cc.stop_moving(1.0)
 	rospy.signal_shutdown("End")	

@@ -89,7 +89,7 @@ class Demo(object):
 				pass
 			else:
 				print "find door stage"
-				cc.rotate_in_place('CCW', 110, 0.2)
+				cc.rotate_in_place('CCW', 90, 0.3)
 				ts = time.time()
 				detect_list = []
 				while time.time() - ts <= 0.2:
@@ -106,32 +106,46 @@ class Demo(object):
 				else:
 					door = 2
 				if in_range(ratio, self.bound[door], self.bound[door+1]):
+					print "I found door ", self.door_frequency
 					cc.go_straight(120, 2)
 				else:
 					if self.start_tag == 'A':
 						ts = time.time()
-						cc.rotate_in_place('CCW', 90, 0.5)
+						cc.rotate_in_place('CCW', 90, 0.3)
 					else:
 						ts = time.time()
-						cc.rotate_in_place('CW', 90, 0.5)
+						cc.rotate_in_place('CW', 90, 0.3)
 	def get_tag(self):
 		return self.start_tag
 
 	def get_state(self):
 		return self.first_find_target
+	
+	def shutdown(self):
+		print "Shutdown in progress"
+		self.thread_1._Thread__stop()
+		self.thread_2._Thread__stop()
+		self.thread_3._Thread__stop()
+		self.thread_4._Thread__stop()
+		self.thread_5._Thread__stop()
+
 
 if __name__ == "__main__":
 	rospy.init_node("demo_4_node")
 	d = Demo()
+	rospy.on_shutdown(d.shutdown)
 	print "Go straight"
 	cc.go_straight(100, 4)
 	print "Turn"
 	if d.get_tag() == 'A':
 		# Turn right
-		cc.turn('Right', 2)
-	elif d.get_tag() == 'C':
+		for i in range(5):
+			cc.rotate_in_place('CW', 90, 0.3)
+	else:
 		# Turn left
-		cc.turn('Left', 2)
+		for i in range(5):
+			cc.rotate_in_place('CCW', 90, 0.3)
+	cc.go_straight(100, 2)
 	ts = time.time()
 	print "Start rotate in place"
 	while time.time() - ts <= 10:
@@ -143,5 +157,7 @@ if __name__ == "__main__":
 		print "Not reach, start arbitrary traversing"
 		while not rospy.is_shutdown():
 			cc.go_straight(100, 2)
-			cc.rotate_in_place('CW', 90, 0.5)
+			r = random.randint(1, 3)
+			for i in range(r):
+				cc.rotate_in_place('CW', 90, 0.5)
 

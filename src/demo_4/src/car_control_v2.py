@@ -9,7 +9,7 @@ class Car_control(object):
 		self.pub_right_pwm = rospy.Publisher("right_pwm", Int16, queue_size = 5)
 		self.pub_left_pwm  = rospy.Publisher("left_pwm", Int16, queue_size = 5)
 		self.trim = rospy.get_param("/demo_4_node/trim", -20)
-		print self.trim
+		print "Trim is now: ", self.trim
 		self.pwm_data = Int16()
 		rospy.sleep(3.0)
 	# Stop moving
@@ -17,12 +17,10 @@ class Car_control(object):
 		self.pub_pwm(0, 0, t)
 	# Go straight
 	def go_straight(self, pwm, t):
-		print "straight"
 		self.pub_pwm(pwm + self.trim, pwm - self.trim, t)
 		self.stop_moving(0.5)
 	# Rotate in place
 	def rotate_in_place(self, direction, pwm, t):
-		print "rotate"
 		if direction == "CCW": # Counterclockwise
 			self.pub_pwm(pwm, -pwm, t)
 			self.stop_moving(0.5)
@@ -31,17 +29,14 @@ class Car_control(object):
 			self.stop_moving(0.5)
 	# Reverse
 	def reverse(self, t):
-		print "reverse"
 		self.pub_pwm(-80 - self.trim, -80 + self.trim, t)
 		self.stop_moving(0.5)
 	# Turn
 	def turn(self, direction, t):
 		if direction == "Left" or direction == "left":
-			print "turn left"
 			self.pub_pwm(100, 80, t)
 			self.stop_moving(0.5)
 		elif direction == "Right" or direction == "right":
-			print "turn right"
 			self.pub_pwm(80, 110, t)
 			self.stop_moving(0.5)
 	# Publish pwm data
@@ -55,10 +50,12 @@ class Car_control(object):
 			rospy.sleep(0.1)
 	# Delete class function
 	def __del__(self):
+		print "Shutdown..."
 		self.stop_moving(2.0)
 	# ROS shutdown function
 	def shutdown(self):
 		pass
+
 if __name__ == "__main__":
 	rospy.init_node("car_control_node")		
 	cc = Car_control()

@@ -46,30 +46,40 @@ class Demo(object):
 		while 1:
 			if GPIO.input(22):
 				print "Left collision"
-				cc.stop_moving(0.2)
+				cc.stop_moving(0.5)
 				cc.reverse(2)
-				cc.rotate_in_place('CW', 80, 1)
+				i = random.randint(0, 1)
+				if i == 0:
+					cc.rotate_in_place('CW', 80, 1)
+				else:
+					cc.turn('Right', 2)
 
 	def check_r_collision(self):
 		while 1:
 			if GPIO.input(5):
 				print "Right collision"
-				cc.stop_moving(0.2)
+				cc.stop_moving(0.5)
 				cc.reverse(2)
-				cc.rotate_in_place('CCW', 80, 1)
+				i = random.randint(0, 1)
+				if i == 0:
+					cc.rotate_in_place('CCW', 80, 1)
+				else:
+					cc.turn('Left', 2)
+
 	def check_p_collision(self):
 		while 1:
 			if GPIO.input(27) and not self.first_find_target:
 				print "Photo collision"
-				cc.stop_moving(0.2)
+				cc.stop_moving(0.5)
 				self.first_find_target = True
 			if self.first_find_target:
 				pass
+
 	def check_find_light(self):
 		while 1:
 			if not GPIO.input(21) and not self.first_find_target:
 				print "Find light"
-				cc.stop_moving(0.2)
+				cc.stop_moving(0.5)
 				cc.go_straight(120, 2)
 			else:
 				pass # We have found light, so don't sprint
@@ -115,13 +125,20 @@ if __name__ == "__main__":
 	d = Demo()
 	print "Go straight"
 	cc.go_straight(100, 4)
+	print "Turn"
+	if d.get_tag() == 'A':
+		# Turn right
+		cc.turn('Right', 2)
+	elif d.get_tag() == 'C':
+		# Turn left
+		cc.turn('Left', 2)
 	ts = time.time()
 	print "Start rotate in place"
 	while time.time() - ts <= 10:
 		if d.get_tag() == 'A':
-			cc.rotate_in_place('CW', 90, 0.5)
+			cc.rotate_in_place('CW', 90, 0.3)
 		else:
-			cc.rotate_in_place('CCW', 90,0.5)
+			cc.rotate_in_place('CCW', 90,0.3)
 	if d.get_state() != "True":
 		print "Not reach, start arbitrary traversing"
 		while not rospy.is_shutdown():

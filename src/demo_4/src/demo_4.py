@@ -27,7 +27,7 @@ class Demo(object):
 		self.start_tag = rospy.get_param("~start_tag", "A") # A / C
 		self.door_frequency = rospy.get_param("~door_frequency", 600) # 600 / 1500
 		print "Start from {}, go to door {}".format(self.start_tag, str(self.door_frequency))
-		self.bound = [0.23, 0.16, 0.33, 0.26] # [0:2] -> 1500, [2:4] -> 600
+		self.bound = [0.23, 0.16, 0.34, 0.26] # [0:2] -> 1500, [2:4] -> 600
 		self.thread_l = threading.Thread(target = self.check_l_collision)
 		self.thread_r = threading.Thread(target = self.check_r_collision)
 		self.thread_p = threading.Thread(target = self.check_p_collision)
@@ -42,6 +42,8 @@ class Demo(object):
 		self.flag = None
 		self.cc = Car_control()
 		self.no_collide = 0
+		self.execute_time = None
+		self.ratio = None
 
 	def check_l_collision(self):
 		while 1:
@@ -57,11 +59,11 @@ class Demo(object):
 		while 1:
 			self.find_target = GPIO.input(27)
 			if self.find_target:
-				print "Find target"
+				#print "Find target"
 				self.flag = True
 			else:
 				self.flag = False
-			time.sleep(0.1)
+			time.sleep(0.01)
 
 	def check_find_light(self):
 		while 1:
@@ -85,12 +87,12 @@ class Demo(object):
 				for i in range(data_len):
 					if data_arr[i] == 0:
 						data_0_len += 1
-				ratio = data_0_len / float(data_len)
+				self.ratio = data_0_len / float(data_len)
 				if self.door_frequency == 1500:
 					door_idx = 0
 				else:
 					door_idx = 1
-				if in_range(ratio, self.bound[door_idx], self.bound[door_idx+1]):
+				if in_range(self.ratio, self.bound[door_idx], self.bound[door_idx+1]):
 					self.near_door = True
 					print "Find door ", self.door_frequency
 				else:
@@ -102,6 +104,8 @@ class Demo(object):
 		self.thread_p.start()
 		self.thread_ph.start()
 		self.thread_ir.start()
+		print "Threads start"
+		self.execute_time = time.time()
 	
 	def approach_ball(self):
 		print "Go straight"
@@ -112,15 +116,14 @@ class Demo(object):
 		else:
 			direct = 'CCW'
 		for i in range(3):
-			self.cc.rotate_in_place(direct, 90, 0.3)
+			self.cc.rotate_in_place(direct, 100, 0.2)
 		print "Go straight again"
 		self.cc.go_straight(110, 1.5)
 		print "Rotate in place to find ball"
-		ts = time.time()
 		find_tp = None
 		collide = None
-		while time.time() - ts <= 6:
-			self.cc.rotate_in_place(direct, 90, 0.4)
+		for i in range(4):
+			self.cc.rotate_in_place(direct, 100, 0.2)
 			if self.photo_state:
 				print "Break since find light"
 				find_tp = True
@@ -129,53 +132,91 @@ class Demo(object):
 			print "Not found, go forward a little bit"
 			self.cc.go_straight(100, 1)
 			if self.start_tag == "A":
-				direct = 'CCW'
-			else:
 				direct = 'CW'
+			else:
+				direct = 'CCW'
 			print "Rotate in place"
-			ts = time.time()
-			while time.time() - ts <= 6:
-				self.cc.rotate_in_place(direct, 90, 0.4)
+			for i in range(5):
+				print "Times: ", i
+				self.cc.rotate_in_place(direct, 100, 0.2)
 				if self.photo_state:
 					print "Break since find light"
 					find_tp = True
 					break
+			if self.start_tag == 'A':
+				direct = 'CCW'
+			else:
+				direct = 'CW'
+			if not find_tp:
+				for i in range(9):
+					print "Times: ", i
+					self.cc.rotate_in_place(direct, 100, 0.2)
+					if self.photo_state:
+						print "Break since find light"
+						find_tp = True
+						break
 		if self.photo_state or find_tp or self.flag:
 			if not self.find_target:
 				print "Find light, move toward it"
-				self.cc.stop_moving(0.3)
-				self.cc.go_straight(120, 1)
+				self.cc.go_straight(120, 0.5)
 				if self.photo_state:
-					self.cc.go_straight(100, 0.5)
-					if self.find_target:
-						collide = True
+					self.cc.go_straight(100, 1.0)
+				if self.find_target or collide:
+					print 'hey'
+					collide = True
+					self.cc.stop_moving(0.5)
 		if self.find_target or collide:
 			print "Find target, try to find door"
+			self.cc.stop_moving(0.5)
 			if self.start_tag == 'A':
 				direct = 'CCW'
 			else:
 				direct = 'CW'
 			ts = time.time()
 			count = 0
-			while time.time() - ts <= 10:
-				self.cc.rotate_in_place(direct, 100, 0.5)
+			while not self.near_door:
+				print "Not found with ratio {}, rotate in place".format(self.ratio)
+				self.cc.rotate_in_place(direct, 110, 0.5)
+				if count == 1 or count == 3:
+					self.cc.go_straight(100, 1)
+					#if direct == 'CCW':
+						#direct = 'CW'
+					#else:
+						#direct = 'CCW'
+					#count = 0
 				count += 1
-				if count == 3:
+				if self.near_door:
+					break
+			print "Find door with {}, go toward it".format(self.ratio)
+			if self.ratio < 0.2:
+				self.cc.go_straight(100, 1)
+				self.cc.rotate_in_place('CW', 0.5)
+				self.cc.go_straight(150, 3)
+			else:
+				self.cc.go_straight(150, 3)
+		
+			'''while time.time() - ts <= 15:
+				self.cc.rotate_in_place(direct, 110, 0.5)
+				count += 1
+				if count % 5 == 0:
 					print "Reach 3 times"
-					self.cc.go_straight(120, 0.5)
+					self.cc.go_straight(120, 1.0)
 				if self.near_door:
 					print "Find door, move toward it"
 					self.cc.go_straight(130, 3)
 					break
+				#self.cc.go_straight(100, 0.5)'''
 		self.first = False 
 		print "Not found in first search, start try randomly search the map..."
 
 	def traverse(self):
 		while not rospy.is_shutdown():
+			t = time.time() - self.execute_time
+			print "Execute time: ", t
 			if self.first:
 				self.approach_ball()
 			else:
-				self.cc.go_straight(100, 2)
+				self.cc.go_straight(100, 2.5)
 				if self.photo_state:
 					print "Find light, move toward it"
 					self.cc.go_straight(120, 1)
@@ -206,17 +247,25 @@ class Demo(object):
 
 	def check_collision(self):
 		if self.l_collision:
+			self.no_collision = 0
 			print "Left collision"
 			self.cc.stop_moving(1)
 			self.cc.reverse(1)
-			#self.cc.rotate_in_place('CW', 90, 1)
-			self.cc.turn('Right', 2)
+			turn = random.randint(0, 1)
+			if turn == 0:
+				self.cc.rotate_in_place('CW', 90, 1)
+			else:
+				self.cc.turn('Right', 2)
 		if self.r_collision:
+			self.no_collision = 0
 			print "Right collision"
 			self.cc.stop_moving(1)
 			self.cc.reverse(1)
-			#self.cc.rotate_in_place('CCW', 90, 1)
-			self.cc.turn('Left', 2)
+			turn = random.randint(0, 1)
+			if turn == 0:
+				self.cc.rotate_in_place('CCW', 90, 1)
+			else:
+				self.cc.turn('Left', 2)
 		if self.ph_collision:
 			print "Photo collision"
 			self.cc.stop_moving(1)
@@ -225,17 +274,21 @@ class Demo(object):
 			self.no_collide += 1
 		if self.no_collide == 5:
 			print "No collision too long time, car may be block"
-			self.collide = 0
-			self.cc.reverse(3)
+			self.no_collide = 0
+			self.cc.reverse(2)
 			
 	
 	def try_find_door(self):
 		count = 0
-		while count < 3 and not self.near_door:
-			self.cc.rotate_in_place('CW', 100, 0.5)
+		if self.door_frequency == 1500:
+			direct = 'CCW'
+		else:
+			direct = 'CW'
+		while count < 5 and not self.near_door:
+			self.cc.rotate_in_place(direct, 100, 0.5)
 			count += 1
 		if self.near_door:
-			self.cc.go_straight(120, 1)
+			self.cc.go_straight(120, 3)
 		
 			
 	def shutdown(self):
@@ -245,7 +298,6 @@ class Demo(object):
 		self.thread_p._Thread__stop()
 		self.thread_ph._Thread__stop()
 		self.thread_ir._Thread__stop()
-
 
 if __name__ == "__main__":
 	rospy.init_node("demo_4_node")

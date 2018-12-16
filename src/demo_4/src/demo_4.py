@@ -41,6 +41,7 @@ class Demo(object):
 		self.near_door = None
 		self.flag = None
 		self.cc = Car_control()
+		self.no_collide = 0
 
 	def check_l_collision(self):
 		while 1:
@@ -58,6 +59,8 @@ class Demo(object):
 			if self.find_target:
 				print "Find target"
 				self.flag = True
+			else:
+				self.flag = False
 			time.sleep(0.1)
 
 	def check_find_light(self):
@@ -67,7 +70,7 @@ class Demo(object):
 					self.photo_state = False
 				else:
 					self.photo_state = True
-					print "Find light"
+					#print "Find light"
 			time.sleep(0.1)
 
 	def check_ir(self):
@@ -117,19 +120,35 @@ class Demo(object):
 		find_tp = None
 		collide = None
 		while time.time() - ts <= 6:
-			self.cc.rotate_in_place(direct, 90, 0.3)
+			self.cc.rotate_in_place(direct, 90, 0.4)
 			if self.photo_state:
 				print "Break since find light"
 				find_tp = True
 				break
+		if not find_tp:
+			print "Not found, go forward a little bit"
+			self.cc.go_straight(100, 1)
+			if self.start_tag == "A":
+				direct = 'CCW'
+			else:
+				direct = 'CW'
+			print "Rotate in place"
+			ts = time.time()
+			while time.time() - ts <= 6:
+				self.cc.rotate_in_place(direct, 90, 0.4)
+				if self.photo_state:
+					print "Break since find light"
+					find_tp = True
+					break
 		if self.photo_state or find_tp or self.flag:
-			print "Find light, move toward it"
-			self.cc.stop_moving(1)
-			self.cc.go_straight(120, 1)
-			if self.photo_state:
-				self.cc.go_straight(100, 0.5)
-				if self.find_target:
-					collide = True
+			if not self.find_target:
+				print "Find light, move toward it"
+				self.cc.stop_moving(0.3)
+				self.cc.go_straight(120, 1)
+				if self.photo_state:
+					self.cc.go_straight(100, 0.5)
+					if self.find_target:
+						collide = True
 		if self.find_target or collide:
 			print "Find target, try to find door"
 			if self.start_tag == 'A':
@@ -156,10 +175,12 @@ class Demo(object):
 			if self.first:
 				self.approach_ball()
 			else:
-				self.cc.go_straight(100, 1)
+				self.cc.go_straight(100, 2)
 				if self.photo_state:
+					print "Find light, move toward it"
 					self.cc.go_straight(120, 1)
 					if self.find_target:
+						print "Find target, try to find door"
 						self.try_find_door()
 				self.check_collision()
 				r = random.randint(1, 3)
@@ -168,15 +189,19 @@ class Demo(object):
 					direct = 'CW'
 				else:
 					direct = 'CCW'
+				print "Rotate in place " + str(r) + " times"
 				for i in range(r):
 					self.cc.rotate_in_place(direct, 100, 0.5)
 					if self.photo_state:
+						print "Break since find light"
 						break
 					self.check_collision()
 				if self.photo_state:
+					print "Move toward light"
 					self.cc.stop_moving(0.3)
 					self.cc.go_straight(130, 1)
 					if self.find_target:
+						print "Find light, try to find door"
 						self.try_find_door()
 
 	def check_collision(self):
@@ -184,16 +209,25 @@ class Demo(object):
 			print "Left collision"
 			self.cc.stop_moving(1)
 			self.cc.reverse(1)
-			self.cc.rotate_in_place('CW', 90, 1)
+			#self.cc.rotate_in_place('CW', 90, 1)
+			self.cc.turn('Right', 2)
 		if self.r_collision:
 			print "Right collision"
 			self.cc.stop_moving(1)
 			self.cc.reverse(1)
-			self.cc.rotate_in_place('CCW', 90, 1)
+			#self.cc.rotate_in_place('CCW', 90, 1)
+			self.cc.turn('Left', 2)
 		if self.ph_collision:
 			print "Photo collision"
 			self.cc.stop_moving(1)
 			self.find_target = True
+		if not self.l_collision and not self.r_collision:
+			self.no_collide += 1
+		if self.no_collide == 5:
+			print "No collision too long time, car may be block"
+			self.collide = 0
+			self.cc.reverse(3)
+			
 	
 	def try_find_door(self):
 		count = 0

@@ -29,7 +29,7 @@ class Car_control(object):
 			self.stop_moving(0.5)
 	# Reverse
 	def reverse(self, t):
-		self.pub_pwm(-120 - self.trim, -120 + self.trim, t)
+		self.pub_pwm(-100 - self.trim, -100 + self.trim, t)
 		self.stop_moving(0.5)
 	# Turn
 	def turn(self, direction, t):

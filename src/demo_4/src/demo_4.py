@@ -2,7 +2,7 @@
 
 import rospy
 import random
-import RPi.GPIO as gpio
+import RPi.GPIO as GPIO
 import time
 import threading
 
@@ -15,15 +15,15 @@ GPIO.setup(5, GPIO.IN)  # right collision
 
 class Demo(object):
 	def __init__(self):
+		self.state = None
+		self.last_state = 'pi'
 		self.thread_l = threading.Thread(target = self.check_l_collision)
 		self.thread_r = threading.Thread(target = self.check_r_collision)
-		self.sub_state = rospy.Subscriber("/state", String, cb_state, queue_size = 5)
+		self.sub_state = rospy.Subscriber("/state", String, self.cb_state, queue_size = 5)
 		self.first = True
 		self.cc = Car_control()
 		self.l_collision = None
 		self.r_collision = None
-		self.state = None
-		self.last_state = 'pi'
 	
 	def check_l_collision(self):
 		while 1:
@@ -59,29 +59,31 @@ class Demo(object):
 	def cb_state(self, msg):
 		self.state = msg.data
 		if self.state != self.last_state:
-			print "State changes from {} to {}".format(self.last_state, self.state)
+			print "State changes from '{}' to '{}'".format(self.last_state, self.state)
 		self.last_state = self.state
 
 	def approach_ball(self):
-		print "Go straight"
-		self.cc.go_straight(100, 3.5)
-		print "Rotate in place"
-		for i in range(3):
-			self.cc.rotate_in_place('CW', 100, 0.2)
-		print "Go straight again"
-		self.cc.go_straight(110, 1.5)
-		print "Rotate in place to find ball"
-		while self.state == "pi":
+		if self.first:
+			print "Go straight"
+			self.cc.go_straight(100, 3.5)
+			print "Rotate in place"
 			for i in range(4):
 				self.cc.rotate_in_place('CW', 100, 0.2)
-			if self.state == "pi":
-				print "Not found in first rotate, keep rotating with different direction..."
-				for i in range(9):
-					self.cc.rotate_in_place('CCW', 100, 0.2)
-		self.state = 'random'
-		self.first = False
+			print "Go straight again"
+			self.cc.go_straight(110, 1.5)
+			print "Rotate in place to find ball"
+			while self.state == "pi":
+				for i in range(4):
+					self.cc.rotate_in_place('CW', 100, 0.2)
+				if self.state == "pi":
+					print "Not found in first rotate, keep rotating with different direction..."
+					for i in range(9):
+						self.cc.rotate_in_place('CCW', 100, 0.2)
+			self.state = 'random'
+			self.first = False
 		while not rospy.is_shutdown():
 			self.cc.go_straight(100, 2.0)
+			self,collision()
 	
 	def shutdown(self):
 		print "Shutdown in progress"

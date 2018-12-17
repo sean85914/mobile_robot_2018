@@ -37,7 +37,7 @@ ros::NodeHandle nh;
 int pwm_r = 0, pwm_l = 0;
 
 // Parameters
-int* trim_;
+int trim_ = -15;
 int* door_frequency;
 
 // Sensor data
@@ -116,7 +116,7 @@ void loop() {
   if(str_state.data == "pi") {motor_control(pwm_r, pwm_l);}
   if(str_state.data == "move toward ball"){
     motor_control(0, 0); // Stop first
-    motor_control(120 + *trim_, 120 - *trim_);
+    motor_control(120 + trim_, 120 - trim_);
     delay(1000); // Move toward it for 1 second
   }
   if(str_state.data == "find door"){
@@ -127,7 +127,7 @@ void loop() {
   if(str_state.data == "move toward door")
   {
     motor_control(0, 0); // Stop first
-    motor_control(150 + *trim_, 150 - *trim_);
+    motor_control(150 + trim_, 150 - trim_);
     delay(1000); // Move toward it for 1 second
   }
   nh.spinOnce();

@@ -4,8 +4,8 @@
   <arg name="start_tag" default="A"/>
   <node pkg="demo_4" type="demo_4.py" name="demo_4_node" output="screen" required="true">
     <param name="trim" value="$(arg trim)"/>
-    <param name="door_frequency" value="$(arg door_frequency)"/>
-    <param name="start_tag" value="$(arg start_tag)"/>
+    <!--param name="door_frequency" value="$(arg door_frequency)"/-->
+    <!--param name="start_tag" value="$(arg start_tag)"/-->
   </node>
   <node pkg="rosserial_python" type="serial_node.py" name="arduino" args="/dev/ttyACM0" output="screen"/>
 </launch>

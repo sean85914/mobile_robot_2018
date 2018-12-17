@@ -43,9 +43,10 @@ int* door_frequency;
 // Sensor data
 bool photo, touch, find_door;
 
-int bound[4] = {0.23, 0.16, 0.34, 0.26}; // [0:2] -> 1500, [2:4] -> 600
+double bound[4] = {0.23, 0.16, 0.34, 0.26}; // [0:2] -> 1500, [2:4] -> 600
 int door_idx = 0; // 0 -> 1500, 1 -> 600
-float ratio;
+double ratio;
+bool has_find = false;
 
 // callback
 void cb_r(const std_msgs::Int16& msg){
@@ -65,6 +66,7 @@ std_msgs::String str_state;
 ros::Subscriber<std_msgs::Int16> sub_right("right_pwm", &cb_r);
 ros::Subscriber<std_msgs::Int16> sub_left("left_pwm", &cb_l);
 ros::Publisher pub_state("state", &str_state);
+ros::Publisher pub_ratio("ratio", &ratio_data);
 
 void setup() {
   // Init ROS node handler
@@ -76,6 +78,7 @@ void setup() {
   nh.subscribe(sub_left);
   // Publisher
   nh.advertise(pub_state);
+  nh.advertise(pub_ratio);
   // Get parameters
   //getParameter();
   // Set pinmode
@@ -97,38 +100,45 @@ void loop() {
   photo = digitalRead(PHOTO); // 1: not light
   touch = digitalRead(TOUCH);
   if(photo and not touch){
-    str_state.data = "pi";
+    if(millis() < 20000)
+      str_state.data = "pi";
+    else str_state.data = "random";
   }
   if(!photo)
   {
     str_state.data = "move toward ball";
   }
-  if(touch)
+  if(touch or (!photo and has_find))
   {
     str_state.data = "find door";
     update_ratio();
+    has_find = true;
   }
   if(find_door)
   {
     str_state.data = "move toward door";
   }
   pub_state.publish(&str_state);
-  if(str_state.data == "pi") {motor_control(pwm_r, pwm_l);}
+  if(str_state.data == "pi" or 
+    str_state.data == "random") {motor_control(pwm_r, pwm_l);} // From topics
   if(str_state.data == "move toward ball"){
     motor_control(0, 0); // Stop first
     motor_control(120 + trim_, 120 - trim_);
     delay(1000); // Move toward it for 1 second
+    motor_control(0, 0); // then stop again
   }
   if(str_state.data == "find door"){
     motor_control(0, 0); // Stop first
     motor_control(100, -100); 
     delay(200); // Rotate CCW about 0.2 second
+    motor_control(0, 0); // then stop again
   }
   if(str_state.data == "move toward door")
   {
     motor_control(0, 0); // Stop first
     motor_control(150 + trim_, 150 - trim_);
     delay(1000); // Move toward it for 1 second
+    motor_control(0, 0); // then stop again
   }
   nh.spinOnce();
 }

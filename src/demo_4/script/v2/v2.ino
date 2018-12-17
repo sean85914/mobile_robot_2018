@@ -39,11 +39,12 @@ int pwm_r = 0, pwm_l = 0;
 // Parameters
 int trim_ = -15;
 int* door_frequency;
+int count = 0;
 
 // Sensor data
 bool photo, touch, find_door;
 
-double bound[4] = {0.23, 0.16, 0.34, 0.26}; // [0:2] -> 1500, [2:4] -> 600
+double bound[4] = {0.20, 0.13, 0.34, 0.26}; // [0:2] -> 1500, [2:4] -> 600
 int door_idx = 0; // 0 -> 1500, 1 -> 600
 double ratio;
 bool has_find = false;
@@ -123,22 +124,31 @@ void loop() {
     str_state.data == "random") {motor_control(pwm_r, pwm_l);} // From topics
   if(str_state.data == "move toward ball"){
     motor_control(0, 0); // Stop first
-    motor_control(120 + trim_, 120 - trim_);
-    delay(1000); // Move toward it for 1 second
+    long ts = millis();
+    while(!digitalRead(TOUCH) and (millis() - ts < 2000)){
+      motor_control(120 + trim_, 120 - trim_);
+    }
     motor_control(0, 0); // then stop again
   }
   if(str_state.data == "find door"){
     motor_control(0, 0); // Stop first
-    motor_control(100, -100); 
-    delay(200); // Rotate CCW about 0.2 second
+    motor_control(110, -110); 
+    delay(750); // Rotate CCW about 0.5 second
     motor_control(0, 0); // then stop again
+    delay(100);
+    motor_control(120 + trim_, 120 - trim_);
+    delay(300);
+    motor_control(-110, 110);
+    delay(300);
   }
   if(str_state.data == "move toward door")
   {
     motor_control(0, 0); // Stop first
     motor_control(150 + trim_, 150 - trim_);
-    delay(1000); // Move toward it for 1 second
+    delay(500); // Move toward it for 0.5 second
     motor_control(0, 0); // then stop again
   }
+  if(count == 5) count = 0;
+  has_find = digitalRead(TOUCH);
   nh.spinOnce();
 }

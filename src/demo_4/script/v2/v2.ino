@@ -1,7 +1,7 @@
 #include <ros.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/String.h>
-#include <std_msgs/Float32.h>
+#include <std_msgs/Float64.h>
 
 /* 
   Note:
@@ -44,8 +44,8 @@ int count = 0;
 // Sensor data
 bool photo, touch, find_door;
 
-double bound[4] = {0.20, 0.13, 0.34, 0.26}; // [0:2] -> 1500, [2:4] -> 600
-int door_idx = 0; // 0 -> 1500, 1 -> 600
+double bound[4] = {0.16, 0.11, 0.23, 0.19}; // [0:2] -> 1500, [2:4] -> 600
+int door_idx = 2; // 0 -> 1500, 2 -> 600
 double ratio;
 bool has_find = false;
 
@@ -60,7 +60,7 @@ void cb_l(const std_msgs::Int16& msg){
   //nh.loginfo("pwm l update");
 } 
 
-std_msgs::Float32 ratio_data;
+std_msgs::Float64 ratio_data;
 std_msgs::String str_state;
 
 // Subscribers and publishers
@@ -101,7 +101,7 @@ void loop() {
   photo = digitalRead(PHOTO); // 1: not light
   touch = digitalRead(TOUCH);
   if(photo and not touch){
-    if(millis() < 20000)
+    if(millis() < 40000)
       str_state.data = "pi";
     else str_state.data = "random";
   }
@@ -132,16 +132,21 @@ void loop() {
   }
   if(str_state.data == "find door"){
     motor_control(0, 0); // Stop first
-    motor_control(110, -110); 
-    delay(750); // Rotate CCW about 0.5 second
-    motor_control(0, 0); // then stop again
-    delay(100);
-    motor_control(120 + trim_, 120 - trim_);
-    delay(300);
-    motor_control(-110, 110);
-    delay(300);
+    motor_control(105, -105);
+    long ts = millis();
+    while(!find_door and (millis() - ts <3000)){ 
+      update_ratio(); if(find_door) break;
+      delay(600); // Rotate CCW about 0.6 second
+      motor_control(0, 0); // then stop again
+      update_ratio(); if(find_door) break;
+      motor_control(100 + trim_, 100 - trim_);
+      delay(400);
+      update_ratio(); if(find_door) break;
+      motor_control(-105, 105);
+      delay(400);
+    }
   }
-  if(str_state.data == "move toward door")
+  if(str_state.data == "move toward door" or find_door)
   {
     motor_control(0, 0); // Stop first
     motor_control(150 + trim_, 150 - trim_);
